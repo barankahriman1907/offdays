@@ -1,0 +1,11 @@
+{
+  "appId": "com.lodos.offdays",
+  "appName": "OFFDAYS",
+  "webDir": "www",
+  "backgroundColor": "#f5f7f3",
+  "ios": { "contentInset": "never", "backgroundColor": "#f5f7f3" },
+  "android": { "backgroundColor": "#f5f7f3" },
+  "plugins": {
+    "SplashScreen": { "launchAutoHide": false, "backgroundColor": "#0f1720" }
+  }
+}

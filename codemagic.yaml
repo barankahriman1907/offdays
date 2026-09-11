@@ -1,0 +1,59 @@
+workflows:
+  ios-testflight:
+    name: OFFDAYS iOS -> TestFlight
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    integrations:
+      app_store_connect: ASC_KEY
+    environment:
+      xcode: latest
+      cocoapods: default
+      vars:
+        APP_ID: BURAYA_APP_STORE_CONNECT_APP_ID
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.lodos.offdays
+    scripts:
+      - name: Bagimliliklar
+        script: npm install
+      - name: iOS platformu
+        script: npx cap add ios || true
+      - name: Ikon kaynaklarini uret
+        script: |
+          python3 -m pip install --quiet --upgrade pip
+          python3 -m pip install --quiet pillow
+          python3 tools/make_assets.py
+          ls -la assets/
+      - name: Ikon ve acilis ekrani uret
+        script: |
+          npx capacitor-assets generate --ios \
+            --iconBackgroundColor '#0f1720' \
+            --splashBackgroundColor '#0f1720' \
+            --splashBackgroundColorDark '#0f1720'
+          echo "--- uretilen ikonlar ---"
+          ls -la ios/App/App/Assets.xcassets/AppIcon.appiconset/
+      - name: Senkron
+        script: npx cap sync ios
+      - name: Sadece iPhone + izin metinleri
+        script: |
+          PLIST=ios/App/App/Info.plist
+          plutil -replace ITSAppUsesNonExemptEncryption -bool NO "$PLIST" || plutil -insert ITSAppUsesNonExemptEncryption -bool NO "$PLIST"
+          plutil -replace UIRequiresFullScreen -bool true "$PLIST" || plutil -insert UIRequiresFullScreen -bool true "$PLIST"
+          plutil -p "$PLIST" | grep ITSAppUsesNonExemptEncryption
+      - name: Pods
+        script: cd ios/App && pod install
+      - name: Build numarasi
+        script: |
+          cd $CM_BUILD_DIR/ios/App
+          LATEST_BUILD_NUMBER=$(app-store-connect get-latest-testflight-build-number "$APP_ID")
+          agvtool new-version -all $(($LATEST_BUILD_NUMBER + 1))
+      - name: Imzalama profilleri
+        script: xcode-project use-profiles
+      - name: IPA derle
+        script: xcode-project build-ipa --workspace ios/App/App.xcworkspace --scheme App
+    artifacts:
+      - build/ios/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
