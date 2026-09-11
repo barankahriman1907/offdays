@@ -38,6 +38,10 @@ workflows:
         script: npx cap sync ios
       - name: Sadece iPhone + izin metinleri
         script: |
+          PBX=ios/App/App.xcodeproj/project.pbxproj
+          sed -i '' 's/TARGETED_DEVICE_FAMILY = "1,2"/TARGETED_DEVICE_FAMILY = "1"/g' "$PBX"
+          sed -i '' 's/TARGETED_DEVICE_FAMILY = 1,2/TARGETED_DEVICE_FAMILY = 1/g' "$PBX"
+          grep -n TARGETED_DEVICE_FAMILY "$PBX" || true
           PLIST=ios/App/App/Info.plist
           plutil -replace ITSAppUsesNonExemptEncryption -bool NO "$PLIST" || plutil -insert ITSAppUsesNonExemptEncryption -bool NO "$PLIST"
           plutil -replace UIRequiresFullScreen -bool true "$PLIST" || plutil -insert UIRequiresFullScreen -bool true "$PLIST"
