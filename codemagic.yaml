@@ -10,7 +10,11 @@ workflows:
       cocoapods: default
       vars:
         APP_ID: 6811039306
-        BUNDLE_ID: com.lodos.offdays
+      ios_signing:
+        provisioning_profiles:
+          - offdays_appstore_profile
+        certificates:
+          - chute_distribution
     scripts:
       - name: Bagimliliklar
         script: npm install
@@ -42,13 +46,6 @@ workflows:
         script: cd ios/App && pod install
       - name: Imzalama dosyalari
         script: |
-          echo "--- mevcut profiller ---"
-          app-store-connect list-profiles --profile-type IOS_APP_STORE --json || true
-          echo "--- sertifikalar ---"
-          app-store-connect list-certificates --type IOS_DISTRIBUTION --json || true
-          keychain initialize
-          app-store-connect fetch-signing-files "$BUNDLE_ID" --type IOS_APP_STORE --create
-          keychain add-certificates
           xcode-project use-profiles
       - name: Build numarasi
         script: |
